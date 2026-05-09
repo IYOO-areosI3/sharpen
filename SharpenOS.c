@@ -1,6 +1,7 @@
 /*
- * SharpenOS 3.3  –  The Cool, Lightweight Terminal with Cat Style :3
+ * SharpenOS 3.4  –  The Cool, Lightweight Terminal with Cat Style :3
  *                    UPDATED: help <command> gives detailed usage
+ *                    NEW: ed PATH now supports ~ and ^^ symbols
  *
  * Compile: gcc -o SharpenOS SharpenOS.c
  * Run:     ./SharpenOS
@@ -44,7 +45,7 @@ static void cat_perror(const char *prefix) {
             prefix, strerror(errno));
 }
 
-/* ---------- Human‑readable size helper (moved to file scope) ---------- */
+/* ---------- Human‑readable size helper ---------- */
 static void format_size(unsigned long long bytes, char *buf, size_t bufsz) {
     const char *units[] = {"B","K","M","G","T","P"};
     int i = 0;
@@ -110,7 +111,7 @@ static void print_prompt(void) {
     fflush(stdout);
 }
 
-/* ---------- Built‑in: ed PATH:<dir> ---------- */
+/* ---------- Built‑in: ed PATH:<dir> with ~ and ^^ ---------- */
 static void execute_ed(char **args) {
     if (args[1] == NULL) {
         cat_error("ed: missing argument PATH:<directory>");
@@ -120,9 +121,29 @@ static void execute_ed(char **args) {
         cat_error("ed: argument must be PATH:<directory>");
         return;
     }
-    const char *path = args[1] + 5;
-    if (*path == '\0') return;   // PATH: alone = stay
-    if (chdir(path) != 0) {
+    const char *raw_path = args[1] + 5;
+    if (*raw_path == '\0') return;   // PATH: alone = stay
+
+    char resolved[PATH_MAX];
+    /* Handle special symbols */
+    if (strcmp(raw_path, "~") == 0) {
+        const char *home = getenv("HOME");
+        if (!home) { cat_error("ed: HOME not set"); return; }
+        strncpy(resolved, home, PATH_MAX);
+        resolved[PATH_MAX-1] = '\0';
+    } else if (raw_path[0] == '~' && raw_path[1] == '/') {
+        const char *home = getenv("HOME");
+        if (!home) { cat_error("ed: HOME not set"); return; }
+        snprintf(resolved, PATH_MAX, "%s%s", home, raw_path+1);
+    } else if (strcmp(raw_path, "^^") == 0) {
+        strncpy(resolved, "..", PATH_MAX);
+        resolved[PATH_MAX-1] = '\0';
+    } else {
+        strncpy(resolved, raw_path, PATH_MAX);
+        resolved[PATH_MAX-1] = '\0';
+    }
+
+    if (chdir(resolved) != 0) {
         cat_perror("ed");
     }
 }
@@ -281,8 +302,14 @@ static void print_command_help(const char *cmd) {
     if (strcmp(cmd, "ed") == 0) {
         printf(BOLD GREEN "ed" RESET " – Enter Directory\n");
         printf("Usage: " BOLD "ed PATH:<directory>" RESET "\n");
-        printf("Example: " BOLD "ed PATH:/sdcard/Documents" RESET "\n");
-        printf("No more 'cd'! Use " BOLD "ed" RESET " to move around.\n");
+        printf("Special Path Symbols:\n");
+        printf("  " BOLD "~" RESET "        your Linux home directory\n");
+        printf("  " BOLD "~/" RESET "path   start from home (e.g. ~/Documents)\n");
+        printf("  " BOLD "^^" RESET "       go up one level (like ..)\n");
+        printf("Examples:\n");
+        printf("  " BOLD "ed PATH:~" RESET "\n");
+        printf("  " BOLD "ed PATH:~/Downloads" RESET "\n");
+        printf("  " BOLD "ed PATH:^^" RESET "\n");
     } else if (strcmp(cmd, "lp") == 0) {
         printf(BOLD GREEN "lp" RESET " – List Path\n");
         printf("Usage: " BOLD "lp [options]" RESET "\n");
@@ -326,7 +353,7 @@ static void execute_help(char **args) {
     if (args[1] == NULL) {
         // General help list
         printf(BOLD CYAN "╭──────── SharpenOS Commands ─────────╮\n" RESET);
-        printf(GREEN "  ed PATH:<dir>" RESET "   → change directory (no cd!)\n");
+        printf(GREEN "  ed PATH:<dir>" RESET "   → change directory (use ~, ^^)\n");
         printf(GREEN "  lp [opts]" RESET "       → list files & folders (no ls!)\n");
         printf("      -nofile    show only folders\n");
         printf("      -nofolder  show only files\n");
