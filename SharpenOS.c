@@ -55,7 +55,7 @@ typedef struct {
 } SharpenTheme;
 
 static const SharpenTheme themes[];
-static size_t theme_count;
+static const size_t theme_count;
 static const SharpenTheme *current_theme;
 
 static const SharpenTheme theme_default = { "default", CYAN, GREEN };
