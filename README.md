@@ -42,6 +42,12 @@ gcc -o SharpenOS SharpenOS.c
 ./SharpenOS
 ```
 
+If you prefer clang compiler it will became
+```bash
+clang -o SharpenOS SharpenOS.c
+./SharpenOS
+```
+
 No external dependencies – only standard C/POSIX libraries.
 
 Note for Android / Termux users:
