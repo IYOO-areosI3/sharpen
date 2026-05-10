@@ -1,0 +1,7 @@
+# Compiled files
+SharpenOS
+*.o
+
+# Temporary files
+*~
+.*.swp
