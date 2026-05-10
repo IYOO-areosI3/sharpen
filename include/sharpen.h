@@ -1,19 +1,25 @@
 #ifndef SHARPEN_H
 #define SHARPEN_H
 
+/* Enable POSIX functions (gethostname, usleep, strncasecmp, etc.) */
+#define _DEFAULT_SOURCE
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>        /* for strncasecmp */
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/utsname.h>
+#include <sys/types.h>       /* for uid_t */
 #include <dirent.h>
 #include <signal.h>
 #include <errno.h>
 #include <time.h>
-#include <limits.h>
+#include <limits.h>          /* for PATH_MAX */
 #include <pwd.h>
 #include <fcntl.h>
 

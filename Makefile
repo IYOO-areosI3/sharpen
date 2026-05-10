@@ -1,5 +1,21 @@
 CC      = gcc
-CFLAGS  = -Wall -Wextra -std=c99 -Iinclude
+CFLAGS  = -std=c99 -Iinclude \
+          -Wall -Wextra -Werror \
+          -Wpedantic \
+          -Wconversion \
+          -Wsign-conversion \
+          -Wshadow \
+          -Wformat=2 \
+          -Wundef \
+          -Wuninitialized \
+          -Winit-self \
+          -Wmissing-prototypes \
+          -Wstrict-prototypes \
+          -Wold-style-definition \
+          -Wimplicit-fallthrough \
+          -Wno-unused-parameter \
+          -O2
+
 TARGET  = SharpenOS
 SRCS    = src/main.c src/commands.c src/utils.c
 OBJS    = $(SRCS:.c=.o)

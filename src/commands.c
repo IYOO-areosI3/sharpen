@@ -1,6 +1,6 @@
 #include "sharpen.h"
 #include "commands.h"
-#include <ctype.h>   /* for tolower in rd */
+#include <ctype.h>
 #include <sys/wait.h>
 
 /* ---------- Command table (global, used by help) ---------- */
@@ -122,7 +122,8 @@ void builtin_ram(char **args) {
     format_size(total, total_str, sizeof(total_str));
     format_size(used,  used_str,  sizeof(used_str));
     format_size(avail, avail_str, sizeof(avail_str));
-    double percent_used = (total > 0) ? (double)used / total * 100.0 : 0.0;
+    /* Fixed: cast both operands to double to avoid -Wconversion */
+    double percent_used = (total > 0) ? ((double)used / (double)total) * 100.0 : 0.0;
     int bar_len = 20;
     int filled = (int)(percent_used / 100.0 * bar_len + 0.5);
     if (filled > bar_len) filled = bar_len;
@@ -183,7 +184,7 @@ void builtin_changelog(char **args) {
     printf(
         BOLD GREEN "SharpenOS Changelog\n" RESET
         "-------------------------\n"
-        "4.1 – Global headers, rd command, zero warnings\n"
+        "4.1 – Global headers, rd search, zero warnings\n"
         "4.0 – Modular project structure\n"
         "3.7 – SHpm with GitHub downloader\n"
         "3.6 – Theme manager, changelog\n"
@@ -203,12 +204,12 @@ static void search_in_file(const char *path, const char *keyword) {
     int lineno = 0;
     while (fgets(line, sizeof(line), fp)) {
         lineno++;
-        /* case‑insensitive search */
         char lower_line[1024];
         char lower_key[256];
-        for (int i = 0; line[i]; i++) lower_line[i] = tolower((unsigned char)line[i]);
+        /* Fixed: explicit cast to char */
+        for (int i = 0; line[i]; i++) lower_line[i] = (char)tolower((unsigned char)line[i]);
         lower_line[strlen(line)] = '\0';
-        for (int i = 0; keyword[i]; i++) lower_key[i] = tolower((unsigned char)keyword[i]);
+        for (int i = 0; keyword[i]; i++) lower_key[i] = (char)tolower((unsigned char)keyword[i]);
         lower_key[strlen(keyword)] = '\0';
 
         if (strstr(lower_line, lower_key)) {
@@ -278,7 +279,7 @@ static void print_spin(const char *msg, pid_t child) {
         printf("\r" BOLD CYAN "%s... %c" RESET, msg, spin[i % 4]);
         fflush(stdout);
         i++;
-        usleep(200000);
+        usleep(200000);  /* now defined because of _DEFAULT_SOURCE */
     }
     printf("\r" BOLD CYAN "%-60s" RESET "\r", " ");
     fflush(stdout);
